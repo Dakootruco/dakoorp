@@ -3,12 +3,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node --env-file=.env --import tsx --watch src/index.ts",
+    "dev": "pnpm --filter @dakoorp/contracts build && node ../../scripts/check-env.mjs && node --env-file-if-exists=.env --import tsx --watch src/index.ts",
     "build": "tsc",
-    "start": "node --env-file=.env dist/index.js"
+    "start": "pnpm --filter @dakoorp/contracts build && node ../../scripts/check-env.mjs && node --env-file-if-exists=.env dist/index.js"
   },
   "dependencies": {
-    "express": "^5.3.0"
+    "express": "^5.3.0",
+    "@dakoorp/contracts": "workspace:*"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",

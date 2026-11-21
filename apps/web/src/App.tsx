@@ -1,7 +1,7 @@
+import { activityListSchema, type Activity } from '@dakoorp/contracts'
 import { useEffect, useState } from 'react'
 import './App.css'
 
-type Activity = { id: string; observed_at: string; status: string; summary: string }
 
 function App() {
   const [events, setEvents] = useState<Activity[]>([])
@@ -17,7 +17,7 @@ function App() {
           signal: AbortSignal.any([controller.signal, AbortSignal.timeout(15000)]),
         })
         if (!response.ok) throw new Error()
-        const data: Activity[] = await response.json()
+        const data = activityListSchema.parse(await response.json())
         if (controller.signal.aborted) return
         setEvents(data)
         setError('')

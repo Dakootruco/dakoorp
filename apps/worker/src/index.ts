@@ -1,3 +1,4 @@
+import { activityInsertSchema, type ActivityInsert } from '@dakoorp/contracts'
 import { randomUUID } from 'node:crypto'
 import { setTimeout as delay } from 'node:timers/promises'
 
@@ -12,7 +13,7 @@ process.on('SIGINT', () => controller.abort())
 process.on('SIGTERM', () => controller.abort())
 
 async function checkSource() {
-  const event = {
+  const event: ActivityInsert = {
     id: randomUUID(),
     observed_at: new Date().toISOString(),
     source: 'dexscreener',
@@ -34,7 +35,7 @@ async function checkSource() {
   const result = await fetch(endpoint, {
     method: 'POST',
     headers,
-    body: JSON.stringify(event),
+    body: JSON.stringify(activityInsertSchema.parse(event)),
     signal: AbortSignal.timeout(15000),
   })
   if (!result.ok) throw new Error('Supabase rechazó el evento. HTTP ' + result.status + '. Comprueba la migración.')

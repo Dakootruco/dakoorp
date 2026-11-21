@@ -1,3 +1,4 @@
+import { activityListSchema } from '@dakoorp/contracts'
 import express from 'express'
 
 const app = express()
@@ -25,7 +26,7 @@ app.get('/api/activity', async (_request, response) => {
       signal: AbortSignal.timeout(10000),
     })
     if (!result.ok) throw new Error('Supabase')
-    response.set('Cache-Control', 'no-store').json(await result.json())
+    response.set('Cache-Control', 'no-store').json(activityListSchema.parse(await result.json()))
   } catch {
     response.status(502).json({ error: 'No se pudo consultar la actividad' })
   }

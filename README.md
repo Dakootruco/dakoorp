@@ -66,7 +66,7 @@ pnpm dev:worker
 pnpm dev
 ```
 
-La web se abre en http://127.0.0.1:5173. La API escucha en http://127.0.0.1:3001. GET /health comprueba el proceso y GET /api/activity comprueba la lectura de Supabase. El worker consulta cada 60 segundos después de terminar el ciclo previo. El panel actualiza cada 10 segundos.
+La web se abre en http://127.0.0.1:5173. La API escucha en http://127.0.0.1:3001. GET /health comprueba el proceso y GET /api/activity comprueba la lectura de Supabase. El worker programa una comprobación por minuto en la cola de Supabase y consulta trabajos disponibles cada 5 segundos. La cola limita los intentos a tres y recupera trabajos cuyo bloqueo temporal vence. El panel actualiza cada 10 segundos.
 
 Ctrl+C detiene el comando de desarrollo. Los eventos permanecen en Supabase. Al cerrar solamente el navegador, el worker continúa mientras su proceso siga ejecutándose.
 
@@ -74,10 +74,10 @@ Ctrl+C detiene el comando de desarrollo. Los eventos permanecen en Supabase. Al 
 
 ```bash
 pnpm build
-pnpm --filter @dakoorp/api start
+APP_ENV=development pnpm --filter @dakoorp/api start
 ```
 
-En otra terminal, ejecutar pnpm --filter web preview y abrir http://127.0.0.1:4173. El worker compilado se arranca con pnpm --filter @dakoorp/worker start.
+En otra terminal, ejecutar APP_ENV=development pnpm --filter web preview y abrir http://127.0.0.1:4173. El worker compilado se arranca con pnpm --filter @dakoorp/worker start.
 
 El alojamiento de producción deberá configurar el enrutamiento /api. El acceso autenticado a la aplicación está pendiente en DAK-015 y DAK-016; estos comandos están preparados para uso local.
 
@@ -113,3 +113,66 @@ pnpm check
 Este comando ejecuta análisis estático, compilación y pruebas automáticas. También están disponibles pnpm lint y pnpm test. Las pruebas de contratos utilizan datos locales y pueden ejecutarse sin credenciales.
 
 .github/workflows/ci.yml ejecuta pnpm check en cada push y pull request, y permite ejecución manual desde GitHub Actions. El primer resultado remoto estará disponible después de subir el workflow.
+
+## Entornos de datos
+
+APP_ENV selecciona development, test o production. El valor por defecto es development. API y worker cargan apps/api/.env.<entorno>; development acepta también el archivo histórico apps/api/.env cuando falta .env.development.
+
+config/environments.json registra la URL pública del proyecto Supabase esperado por entorno. El proyecto actual está asignado a development. Test y production requieren proyectos propios y figuran pendientes. La validación rechaza proyectos repetidos, URLs de otro entorno y entornos sin registrar.
+
+Para preparar test, crear un proyecto Supabase independiente, aplicar las migraciones y registrar su URL en config/environments.json. Copiar apps/api/.env.test.example a apps/api/.env.test y completar sus credenciales. El mismo procedimiento se aplica a production con su plantilla.
+
+```bash
+APP_ENV=test pnpm check:env
+APP_ENV=test pnpm dev:all
+APP_ENV=test pnpm worker:once
+```
+
+La web usa el puerto 5174 y la API 3002 en test. Development usa 5173 y 3001. Production usa 5175 y 3003 para pruebas locales, con preview en 4175. HOST y PORT permiten adaptar el backend al alojamiento.
+
+Para compilar y ejecutar backend de producción, una vez configurado el proyecto correspondiente:
+
+```bash
+pnpm build
+APP_ENV=production pnpm --filter @dakoorp/api start
+APP_ENV=production pnpm --filter @dakoorp/worker start
+```
+
+Los despliegues pueden suministrar las credenciales como variables del proceso. El registro de URLs esperadas sigue aplicándose. NODE_ENV=production requiere APP_ENV explícito.
+
+La web utiliza apps/web/.env.local en development y apps/web/.env.test.local o .env.production.local para el proxy de esos entornos. Sus plantillas están versionadas. La variable de proceso API_PROXY_TARGET tiene prioridad. El despliegue debe enrutar /api al backend del entorno correspondiente.
+
+CI ejecuta pruebas con fixtures temporales y sin conexiones a Supabase. Las pruebas de integración con datos persistidos deben usar APP_ENV=test. Los datos de cada proyecto permanecen separados; las migraciones se aplican a cada proyecto y los fixtures se crean expresamente en pruebas.
+
+La autenticación de usuarios sigue pendiente. El despliegue público se realizará al completar las tareas de acceso y autorización.
+
+## Acceso privado
+
+Crear el usuario propietario en Supabase Authentication y guardar su UUID como OWNER_USER_ID en el archivo del backend del entorno correspondiente. Añadir SUPABASE_PUBLISHABLE_KEY con la clave pública de ese mismo proyecto.
+
+La pantalla de acceso utiliza correo y contraseña con Supabase Auth. La sesión se conserva en el navegador y se renueva mediante el SDK. La API valida el token contra Supabase y permite acceso únicamente al propietario configurado.
+
+GET /api/auth-config publica la URL y clave pública del entorno. La clave secreta permanece en el backend. GET /health sigue siendo público. Las rutas de datos requieren Authorization: Bearer seguido del token de sesión.
+
+Aplicar las migraciones nuevas de oficina y mercado para habilitar departamentos, agentes, tareas y candidatos. La entrada manual de candidatos acepta el mint de Solana y deduplica por red y dirección.
+
+## Pruebas de navegador y base de datos
+
+```bash
+pnpm exec playwright install chromium
+pnpm test:e2e
+```
+
+Las pruebas de navegador simulan las respuestas de autenticación y datos mediante fixtures. Verifican el flujo de la interfaz y la persistencia de sesión. Las pruebas HTTP de la API comprueban rechazos de acceso con servicios simulados.
+
+El job database de CI aplica las migraciones y ejecuta supabase/tests/*.sql sobre PostgreSQL 15 desechable. Cada prueba SQL revierte sus fixtures con rollback.
+
+## Piloto sin consumo de IA de pago
+
+Decisión aprobada el 21 de noviembre de 2026. El piloto usará datos de acceso gratuito confirmado y reglas programadas. El presupuesto de IA es USD 0 por ejecución, día y mes. No hace falta configurar OPENAI_API_KEY. La investigación automática por reglas está en desarrollo; el worker actual comprueba DEX Screener y guarda actividad.
+
+Los servicios pagados requieren aprobación independiente. Consultar docs/DAK-004-presupuesto.md para la decisión vigente y las propuestas históricas.
+
+## MVP de investigación y conversación local
+
+Consulta [la guía del MVP](docs/MVP-local.md) para investigar candidatos, activar seguimiento y descubrimiento, consultar informes y conversar con agentes mediante Ollama. Aplica también `supabase/migrations/202611260001_research_mvp.sql` después de las migraciones anteriores. La investigación funciona sin modelo; el chat requiere el modelo local `qwen3:1.7b` y Ollama en `127.0.0.1:11434`.

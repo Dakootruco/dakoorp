@@ -10,9 +10,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@dakoorp/contracts": "workspace:*",
+    "@supabase/supabase-js": "^2.119.2",
+    "pixi.js": "^8.23.0",
     "react": "^19.3.1",
-    "react-dom": "^19.3.1",
-    "@dakoorp/contracts": "workspace:*"
+    "react-dom": "^19.3.1"
   },
   "devDependencies": {
     "@types/node": "^24.19.2",

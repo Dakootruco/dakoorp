@@ -1,12 +1,38 @@
 # DAK-004 · Presupuestos de infraestructura, datos e IA
 
-- **Fecha** — 20 de noviembre de 2026.
-- **Estado** — Propuesta pendiente de aprobación del propietario.
+- **Fecha** — Actualizado el 21 de noviembre de 2026.
+- **Estado** — Inicio sin consumo de IA de pago aprobado por el propietario. Presupuestos de servicios pagados pendientes de aprobación.
 - **Criterio** — Límites mensuales y por ejecución documentados.
 - **Moneda** — USD; cifras de planificación antes de impuestos y conversión bancaria.
 - **Aplicación** — Los límites descritos requieren implementación en las tareas de orquestación y observabilidad. El worker actual realiza consultas de mercado y persistencia.
 
-## Presupuesto mensual propuesto
+## Decisión vigente aprobada
+
+El 21 de noviembre de 2026 el propietario aprobó comenzar sin consumo de IA de pago.
+
+| Concepto | Límite vigente |
+|---|---:|
+| IA por investigación, incluidos reintentos | USD 0 |
+| IA diaria | USD 0 |
+| IA mensual | USD 0 |
+| Llamadas a modelos de pago | 0 |
+| Entrenamiento de modelos de pago | USD 0 |
+
+La primera versión obtiene datos desde fuentes con acceso gratuito confirmado y usa reglas programadas para filtrar candidatos, calcular métricas, registrar evidencia y producir informes mediante plantillas. No requiere OPENAI_API_KEY. Una clave presente en el entorno no constituye autorización para usar servicios pagados.
+
+DEX Screener es la fuente inicial. J7Tracker se incorporará cuando se confirme que el acceso automatizado disponible es gratuito y esté autorizado. Axiom continúa como herramienta de revisión manual. Las fuentes ausentes producen datos insuficientes y sus comprobaciones pendientes quedan explícitas.
+
+La oficina, la cola, las tareas y los entregables pueden funcionar con ejecutores deterministas. La presentación visual debe reflejar únicamente actividad real. Los resultados de reglas no acreditan que una moneda sea segura.
+
+Desde el 26 de noviembre el worker ejecuta investigaciones por reglas, descubrimiento y seguimiento. El chat utiliza Ollama en el ordenador, con un modelo local y sin proveedor de IA de pago. Las reglas se ejecutan independientemente del modelo.
+
+Cualquier futura incorporación de IA pagada o contratación de datos requiere aprobación explícita de presupuesto y controles de admisión implementados antes de su activación. Los planes gratuitos de infraestructura tienen sus propias cuotas; este acuerdo no autoriza ampliarlos a planes de pago.
+
+## Propuesta histórica de presupuesto — no autorizada
+
+Las cifras que siguen se conservan como referencia de planificación. No son límites vigentes ni autorizaciones de gasto. Los límites de IA vigentes son USD 0.
+
+### Estimación histórica mensual
 
 | Partida | Piloto local | Operación continua inicial |
 |---|---:|---:|
@@ -97,6 +123,6 @@ El ejemplo describe volumen compatible con el presupuesto; las alertas y el sald
 
 Guardar proveedor, modelo, tarea raíz, llamada, fecha, tokens, créditos, coste reservado, coste real y motivo de reintento. Registrar gasto fijo por servicio y periodo de facturación por separado. Evitar incluir credenciales o contenido sensible en logs de costes.
 
-## Aprobación pendiente
+## Revisión futura de servicios pagados
 
 Confirmar techo piloto de USD 50/mes, operación inicial de USD 100/mes y límites por ejecución. Verificar precio J7 y factibilidad del RPC gratuito. Implementar controles en DAK-019, DAK-041 y DAK-074 antes de activar agentes con consumo continuo.

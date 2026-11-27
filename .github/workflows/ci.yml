@@ -21,3 +21,37 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
+
+  database:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: local-ci-only
+          POSTGRES_DB: dakoorp_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d dakoorp_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: local-ci-only
+      PGDATABASE: dakoorp_test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create Supabase roles for isolated SQL checks
+        run: psql -v ON_ERROR_STOP=1 -c 'create role anon; create role authenticated; create role service_role bypassrls;'
+      - name: Apply migrations and run rollback tests
+        run: |
+          for file in supabase/migrations/*.sql supabase/tests/*.sql; do
+            psql -v ON_ERROR_STOP=1 -f "$file"
+          done

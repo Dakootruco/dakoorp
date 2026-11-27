@@ -1,0 +1,14 @@
+{
+  "development": {
+    "supabaseUrl": "https://xvqcdrmnxhyknozvdjsq.supabase.co",
+    "apiPort": 3001
+  },
+  "test": {
+    "supabaseUrl": null,
+    "apiPort": 3002
+  },
+  "production": {
+    "supabaseUrl": null,
+    "apiPort": 3003
+  }
+}
